@@ -1,37 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <title>Our simple HTTP server</title>
-  <link rel="stylesheet" type="text/css" href="/style.css">
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
-  <script type="text/babel">
+  <head>
+    <title>Our simple HTTP server</title>
+    <link rel="stylesheet" type="text/css" href="/style.css" />
 
-  </script>
-</head>
-<body>
-  <section id="top">
-    <h3>POST Status Code Tests</h3>
-    <form id="nameForm" action="/addUser" method="post">
-      <label for="name">Name: </label>
-      <input id="nameField" type="text" name="name" />
-      <label for="age">Age: </label>
-      <input id="ageField" type="number" name="age" min="0" max="100" step="1"/>
-      <input type="submit" value="Add User" />
-    </form>
-    <form id="userForm" action="/getUsers" method="get">
-      <select id='urlField'>
-        <option value='/getUsers'>/getUsers</option>
-        <option value='/notReal'>/notReal</option>
-      </select>
-      <select id="methodSelect">
-        <option value="get">GET</option>
-        <option value="head">HEAD</option>
-      </select>
-      <input type="submit" value="Get User" />
-    </form>
-  </section>
-  <section id="content">
-  </section>
-</body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+    <script type="text/babel">
+      const handleResponse = (xhr, parseResponse) => {
+        const content = document.querySelector("#content");
+        var Message = "";
+
+        if (parseResponse) {
+          //if set to application/json === true if text/xml === false
+          const obj = JSON.parse(xhr.response);
+          console.dir(obj);
+          Message = obj.message;
+        } else {
+          //head
+          console.log("recieved");
+        }
+
+        switch (xhr.status) {
+          case 200:
+            content.innerHTML = `<b>Success</b>`;
+            content.innerHTML += `<br>`;
+            content.innerHTML += `<p>Message: ${Message}</p>`;
+            break;
+          case 400:
+            content.innerHTML = `<b>Bad Request</b>`;
+            content.innerHTML += `<br>`;
+            content.innerHTML += `<p>Message: ${Message}</p>`;
+            break;
+          case 401:
+            content.innerHTML = `<b>Unauthorized</b>`;
+            content.innerHTML += `<br>`;
+            content.innerHTML += `<p>Message: ${Message}</p>`;
+            break;
+          case 403:
+            content.innerHTML = `<b>Forbidden</b>`;
+            content.innerHTML += `<br>`;
+            content.innerHTML += `<p>Message: ${Message}</p>`;
+            break;
+          case 404:
+            content.innerHTML = `<b>Not Found</b>`;
+            content.innerHTML += `<br>`;
+            content.innerHTML += `<p>Message: ${Message}</p>`;
+            break;
+          case 500:
+            content.innerHTML = `<b>Internal Server Error</b>`;
+            content.innerHTML += `<br>`;
+            content.innerHTML += `<p>Message: ${Message}</p>`;
+            break;
+          case 501:
+            content.innerHTML = `<b>Not Implemented</b>`;
+            content.innerHTML += `<br>`;
+            content.innerHTML += `<p>Message: ${Message}</p>`;
+            break;
+          default:
+            content.innerHTML = `<p>Error code not implemented by client</p>`;
+            break;
+        }
+      };
+
+      const requestUpdate = (e, userForm) => {
+        //check if userForm.id is equal to userForm or nameForm for setting correct values
+
+        const url = document.querySelector("#urlField").value;
+        const method = document.querySelector("#methodSelect").value;
+
+        const xhr = new XMLHttpRequest();
+        xhr.open(method, url);
+
+        xhr.setRequestHeader("Accept", "application/json");
+
+        if (method === "get") {
+          xhr.onload = () => handleResponse(xhr, true);
+        } else if (method === "head") {
+          xhr.onload = () => handleResponse(xhr, false);
+        }
+
+        xhr.send();
+
+        e.preventDefault();
+        return false;
+      };
+
+      // const init = () => {
+      //   const sendBtn = document.querySelector("#send");
+
+      //   const sendReq = e => requestUpdate(e);
+
+      //   sendBtn.addEventListener("click", sendReq);
+      // };
+
+      const init = () => {
+        //grab form
+        const nameForm = document.querySelector("#nameForm");
+
+        //function to handle our request
+        const addUsers = e => requestUpdate(e, nameForm);
+
+        //add event listener
+        nameForm.addEventListener("submit", addUsers);
+
+        const userForm = document.querySelector("#userForm");
+
+        //function to handle our request
+        const getUsers = e => requestUpdate(e, userForm);
+
+        //add event listener
+        userForm.addEventListener("submit", getUsers);
+      };
+
+      window.onload = init;
+    </script>
+  </head>
+  <body>
+    <section id="top">
+      <h3>POST Status Code Tests</h3>
+      <form id="nameForm" action="/addUser" method="post">
+        <label for="name">Name: </label>
+        <input id="nameField" type="text" name="name" />
+        <label for="age">Age: </label>
+        <input
+          id="ageField"
+          type="number"
+          name="age"
+          min="0"
+          max="100"
+          step="1"
+        />
+        <input type="submit" value="Add User" />
+      </form>
+      <form id="userForm" action="/getUsers" method="get">
+        <select id="urlField">
+          <option value="/getUsers">/getUsers</option>
+          <option value="/notReal">/notReal</option>
+        </select>
+        <select id="methodSelect">
+          <option value="get">GET</option>
+          <option value="head">HEAD</option>
+        </select>
+        <input type="submit" value="Get User" />
+      </form>
+    </section>
+    <section id="content"></section>
+  </body>
 </html>
