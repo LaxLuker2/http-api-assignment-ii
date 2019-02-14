@@ -47,22 +47,6 @@ const getUsers = (request, response) => {
 const getUsersMeta = (request, response) =>
   respondJSONMeta(request, response, 200);
 
-// function just to update our object
-const updateUser = (request, response) => {
-  // change to make to user
-  // This is just a dummy object for example
-  const newUser = {
-    age: Date.now()
-  };
-
-  // modifying our dummy object
-  // just indexing by time for now
-  users[newUser.createdAt] = newUser;
-
-  // return a 201 created status
-  return respondJSON(request, response, 201);
-};
-
 // function to add a user from a POST body
 const addUser = (request, response, body) => {
   // default json message
@@ -86,6 +70,8 @@ const addUser = (request, response, body) => {
   // if that user's name already exists in our object
   // then switch to a 204 updated status
   if (users[body.name]) {
+    //update
+    users[body.name].age = body.age;
     responseCode = 204;
   } else {
     // otherwise create an object with that name
@@ -234,7 +220,6 @@ module.exports = {
   getUsers,
   getUsersMeta,
   addUser,
-  updateUser,
   getNotFound,
   notFoundMeta,
   getSuccess,

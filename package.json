@@ -8,6 +8,7 @@
   "description": "http api assignment 2 HW",
   "main": "./src/server.js",
   "scripts": {
+    "nodemon": "nodemon --watch ./src ./src/server.js",
     "start": "node ./src/server.js",
     "pretest": "eslint ./src --fix",
     "test": "echo \"Test complete\""
@@ -21,6 +22,7 @@
   "devDependencies": {
     "eslint": "^5.13.0",
     "eslint-config-airbnb": "^17.1.0",
-    "eslint-plugin-import": "^2.16.0"
+    "eslint-plugin-import": "^2.16.0",
+    "nodemon": "^1.18.10"
   }
 }

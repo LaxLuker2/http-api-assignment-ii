@@ -10,7 +10,8 @@
         const content = document.querySelector("#content");
         var Message = "";
 
-        if (parseResponse) {
+        //see if the response from the request returened anything meaning has a body or not
+        if (xhr.response) {
           //if set to application/json === true if text/xml === false
           const obj = JSON.parse(xhr.response);
           console.dir(obj);
