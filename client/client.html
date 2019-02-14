@@ -14,7 +14,11 @@
           //if set to application/json === true if text/xml === false
           const obj = JSON.parse(xhr.response);
           console.dir(obj);
-          Message = obj.message;
+          if (obj.message) {
+            Message = `Message: ${obj.message}`;
+          } else {
+            Message = `${JSON.stringify(obj.users)}`;
+          }
         } else {
           //head
           console.log("recieved");
@@ -24,37 +28,45 @@
           case 200:
             content.innerHTML = `<b>Success</b>`;
             content.innerHTML += `<br>`;
-            content.innerHTML += `<p>Message: ${Message}</p>`;
+            content.innerHTML += `<p>${Message}</p>`;
+            break;
+          case 201:
+            content.innerHTML = `<b>Create</b>`;
+            content.innerHTML += `<br>`;
+            content.innerHTML += `<p>${Message}</p>`;
+            break;
+          case 204:
+            content.innerHTML = `<b>Updated (No Content)</b>`;
             break;
           case 400:
             content.innerHTML = `<b>Bad Request</b>`;
             content.innerHTML += `<br>`;
-            content.innerHTML += `<p>Message: ${Message}</p>`;
+            content.innerHTML += `<p>${Message}</p>`;
             break;
           case 401:
             content.innerHTML = `<b>Unauthorized</b>`;
             content.innerHTML += `<br>`;
-            content.innerHTML += `<p>Message: ${Message}</p>`;
+            content.innerHTML += `<p>${Message}</p>`;
             break;
           case 403:
             content.innerHTML = `<b>Forbidden</b>`;
             content.innerHTML += `<br>`;
-            content.innerHTML += `<p>Message: ${Message}</p>`;
+            content.innerHTML += `<p>${Message}</p>`;
             break;
           case 404:
-            content.innerHTML = `<b>Not Found</b>`;
+            content.innerHTML = `<b>Resource Not Found</b>`;
             content.innerHTML += `<br>`;
-            content.innerHTML += `<p>Message: ${Message}</p>`;
+            content.innerHTML += `<p>${Message}</p>`;
             break;
           case 500:
             content.innerHTML = `<b>Internal Server Error</b>`;
             content.innerHTML += `<br>`;
-            content.innerHTML += `<p>Message: ${Message}</p>`;
+            content.innerHTML += `<p>${Message}</p>`;
             break;
           case 501:
             content.innerHTML = `<b>Not Implemented</b>`;
             content.innerHTML += `<br>`;
-            content.innerHTML += `<p>Message: ${Message}</p>`;
+            content.innerHTML += `<p>${Message}</p>`;
             break;
           default:
             content.innerHTML = `<p>Error code not implemented by client</p>`;
@@ -62,11 +74,11 @@
         }
       };
 
-      const requestUpdate = (e, userForm) => {
+      const requestGETHEADUpdate = (e, userForm) => {
         //check if userForm.id is equal to userForm or nameForm for setting correct values
 
-        const url = document.querySelector("#urlField").value;
-        const method = document.querySelector("#methodSelect").value;
+        const url = userForm.querySelector("#urlField").value;
+        const method = userForm.querySelector("#methodSelect").value;
 
         const xhr = new XMLHttpRequest();
         xhr.open(method, url);
@@ -85,20 +97,60 @@
         return false;
       };
 
-      // const init = () => {
-      //   const sendBtn = document.querySelector("#send");
+      const requestPOSTUpdate = (e, nameForm) => {
+        //grab the forms action (url to go to)
+        //and method (HTTP method - POST in this case)
+        const nameAction = nameForm.getAttribute("action");
+        const nameMethod = nameForm.getAttribute("method");
 
-      //   const sendReq = e => requestUpdate(e);
+        //grab the form's name and age fields so we can check user input
+        const nameField = nameForm.querySelector("#nameField");
+        const ageField = nameForm.querySelector("#ageField");
 
-      //   sendBtn.addEventListener("click", sendReq);
-      // };
+        //create a new Ajax request (remember this is asynchronous)
+        const xhr = new XMLHttpRequest();
+        //set the method (POST) and url (action field from form)
+        xhr.open(nameMethod, nameAction);
+
+        //set our request type to x-www-form-urlencoded
+        //which is one of the common types of form data.
+        //This type has the same format as query strings key=value&key2=value2
+        xhr.setRequestHeader(
+          "Content-type",
+          "application/x-www-form-urlencoded"
+        );
+        //set our requested response type in hopes of a JSON response
+        xhr.setRequestHeader("Accept", "application/json");
+
+        //set our function to handle the response
+        xhr.onload = () => handleResponse(xhr, true);
+
+        //build our x-www-form-urlencoded format. Without ajax the
+        //browser would do this automatically but it forcefully changes pages
+        //which we don't want.
+        //The format is the same as query strings, so key=value&key2=value2
+        //The 'name' fields from the inputs are the variable names sent to
+        //the server.
+        //So ours might look like  name=test&age=22
+        //Again the 'name' fields in the form are the variable names in the string
+        //and the variable names the server will look for.
+        const formData = `name=${nameField.value}&age=${ageField.value}`;
+
+        //send our request with the data
+        xhr.send(formData);
+
+        //prevent the browser's default action (to send the form on its own)
+        e.preventDefault();
+        //return false to prevent the browser from trying to change page
+        return false;
+      };
 
       const init = () => {
         //grab form
         const nameForm = document.querySelector("#nameForm");
 
         //function to handle our request
-        const addUsers = e => requestUpdate(e, nameForm);
+        const addUsers = e => requestPOSTUpdate(e, nameForm);
 
         //add event listener
         nameForm.addEventListener("submit", addUsers);
@@ -106,7 +158,7 @@
         const userForm = document.querySelector("#userForm");
 
         //function to handle our request
-        const getUsers = e => requestUpdate(e, userForm);
+        const getUsers = e => requestGETHEADUpdate(e, userForm);
 
         //add event listener
         userForm.addEventListener("submit", getUsers);

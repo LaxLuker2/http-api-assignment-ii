@@ -11,7 +11,7 @@ const respondJSON = (request, response, status, object) => {
 
   // send response with json object
   response.writeHead(status, headers);
-  response.write(JSON.stringify(object));
+  response.write(object);
   response.end();
 };
 
@@ -31,27 +31,28 @@ const respondJSONMeta = (request, response, status) => {
 
 const getUsers = (request, response) => {
   // json object to send
-  const responseJSON = {
+  const responseGetUsersJSON = {
     users
   };
 
+  const responseGetUsers = JSON.stringify(responseGetUsersJSON);
+
   // return 200 with message
-  return respondJSON(request, response, 200, responseJSON);
+  return respondJSON(request, response, 200, responseGetUsers);
 };
 
 // get meta info about user object
 // should calculate a 200
-const getUsersMeta = (request, response) => {
-  //return 200 without message, just the meta data
-  return respondJSONMeta(request, response, 200);
-};
+// return 200 without message, just the meta data
+const getUsersMeta = (request, response) =>
+  respondJSONMeta(request, response, 200);
 
 // function just to update our object
 const updateUser = (request, response) => {
   // change to make to user
   // This is just a dummy object for example
   const newUser = {
-    createdAt: Date.now()
+    age: Date.now()
   };
 
   // modifying our dummy object
@@ -59,7 +60,53 @@ const updateUser = (request, response) => {
   users[newUser.createdAt] = newUser;
 
   // return a 201 created status
-  return respondJSON(request, response, 201, newUser);
+  return respondJSON(request, response, 201);
+};
+
+// function to add a user from a POST body
+const addUser = (request, response, body) => {
+  // default json message
+  const responseJSON = {
+    message: "Name and age are both required"
+  };
+
+  // check to make sure we have both fields
+  // We might want more validation than just checking if they exist
+  // This could easily be abused with invalid types (such as booleans, numbers, etc)
+  // If either are missing, send back an error message as a 400 badRequest
+  if (!body.name || !body.age) {
+    responseJSON.id = "missingParams";
+    const responseAddUsersString = JSON.stringify(responseJSON);
+    return respondJSON(request, response, 400, responseAddUsersString);
+  }
+
+  // default status code to 201 created
+  let responseCode = 201;
+
+  // if that user's name already exists in our object
+  // then switch to a 204 updated status
+  if (users[body.name]) {
+    responseCode = 204;
+  } else {
+    // otherwise create an object with that name
+    users[body.name] = {};
+  }
+
+  // add or update fields for this user name
+  users[body.name].name = body.name;
+  users[body.name].age = body.age;
+
+  // if response is created, then set our created message
+  // and sent response with a message
+  if (responseCode === 201) {
+    responseJSON.message = "Created Successfully";
+    const responseAddUsersString = JSON.stringify(responseJSON);
+    return respondJSON(request, response, responseCode, responseAddUsersString);
+  }
+  // 204 has an empty payload, just a success
+  // It cannot have a body, so we just send a 204 without a message
+  // 204 will not alter the browser in any way!!!
+  return respondJSONMeta(request, response, responseCode);
 };
 
 // function for 404 not found requests with message
@@ -74,6 +121,12 @@ const getNotFound = (request, response) => {
 
   // return a 404 with an error messagenotFound
   return respondJSON(request, response, 404, notFoundString);
+};
+
+// function for 404 not found without message
+const notFoundMeta = (request, response) => {
+  // return a 404 without an error message
+  respondJSONMeta(request, response, 404);
 };
 
 const getSuccess = (request, response) => {
@@ -180,8 +233,10 @@ const getNotImplemented = (request, response) => {
 module.exports = {
   getUsers,
   getUsersMeta,
+  addUser,
   updateUser,
   getNotFound,
+  notFoundMeta,
   getSuccess,
   getBadRequest,
   getUnauthorized,
